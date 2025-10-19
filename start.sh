@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+# Set Django settings module explicitly
+export DJANGO_SETTINGS_MODULE=async_demo.settings_production
+
 # Wait for database to be ready
 echo "Waiting for database..."
 python manage.py migrate --noinput
