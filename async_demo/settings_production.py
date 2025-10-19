@@ -162,6 +162,10 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
 
+# Disable Celery if Redis is not available
+CELERY_TASK_ALWAYS_EAGER = not bool(os.environ.get('CELERY_BROKER_URL'))
+CELERY_TASK_EAGER_PROPAGATES = True
+
 # Slide processing settings
 SLIDES_WATCH_DIR = Path(os.environ.get('SLIDES_WATCH_DIR', BASE_DIR / 'incoming_slides'))
 SLIDES_CONTENT_DIR = Path(os.environ.get('SLIDES_CONTENT_DIR', BASE_DIR / 'content'))
