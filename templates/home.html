@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Celery Demo</title>
+  </head>
+  <body>
+    <h1>Celery Demo</h1>
+    <ul>
+      <li><a href="/add/">Add two numbers</a></li>
+      <li><a href="/count/">Count words</a></li>
+      <li><a href="/decks/">Processed Slide Decks</a></li>
+    </ul>
+    <p>
+      Run worker: <code>celery -A async_demo worker -l info</code><br />
+      Run Flower: <code>celery -A async_demo flower --port=5555</code>
+    </p>
+  </body>
+  </html>
+
+

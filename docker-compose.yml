@@ -1,0 +1,70 @@
+services:
+  web:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ./:/app
+    command: sh -c "pip install --no-input --disable-pip-version-check -r requirements.txt && python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
+    ports:
+      - "8000:8000"
+    environment:
+      DJANGO_SECRET_KEY: dev-secret-key
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  celery:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ./:/app
+    command: sh -c "pip install --no-input --disable-pip-version-check -r requirements.txt && celery -A async_demo worker -l info -E"
+    environment:
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+      web:
+        condition: service_started
+
+  beat:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ./:/app
+    command: sh -c "pip install --no-input --disable-pip-version-check -r requirements.txt && celery -A async_demo beat -l info"
+    environment:
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+      web:
+        condition: service_started
+
+  flower:
+    image: mher/flower:2.0
+    command: sh -c "celery --broker=redis://redis:6379/0 flower --port=5555"
+    ports:
+      - "5555:5555"
+    environment:
+      FLOWER_BROKER: redis://redis:6379/0
+      FLOWER_PORT: 5555
+      FLOWER_RESULT_BACKEND: redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+      celery:
+        condition: service_started
+

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Count Words</title>
+  </head>
+  <body>
+    <h1>Count words</h1>
+    <form method="post">
+      {% csrf_token %}
+      <textarea name="text" rows="6" cols="60" placeholder="Paste text..."></textarea>
+      <div><button type="submit">Start task</button></div>
+    </form>
+  </body>
+  </html>
+
+

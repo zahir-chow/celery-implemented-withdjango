@@ -1,0 +1,297 @@
+%%%%
+% MTecknology's Resume
+%%%%
+% Author: Michael Lustfield
+% License: CC-BY-4
+% - https://creativecommons.org/licenses/by/4.0/legalcode.txt
+%%%%
+
+\documentclass[letterpaper,10pt]{article}
+%%%%%%%%%%%%%%%%%%%%%%%
+%% BEGIN_FILE: mteck.sty
+%% NOTE: Everything between here and END_FILE can
+%% be relocated to "mteck.sty" and then included with:
+%\usepackage{mteck}
+
+% Dependencies
+% NOTE: Some packages (lastpage, hyperref) require second build!
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\usepackage{fontawesome5}
+\usepackage{multicol}
+\usepackage{bookmark}
+\usepackage{lastpage}
+
+% Sans-Serif
+%\usepackage[sfdefault]{FiraSans}
+%\usepackage[sfdefault]{roboto}
+%\usepackage[sfdefault]{noto-sans}
+%\usepackage[default]{sourcesanspro}
+
+% Serif
+\usepackage{CormorantGaramond}
+\usepackage{charter}
+
+% Colors
+% Use with \color{Name}
+% Can wrap entire heading with {\color{accent} [...] }
+\usepackage{xcolor}
+\definecolor{accentTitle}{HTML}{0e6e55}
+\definecolor{accentText}{HTML}{0e6e55}
+\definecolor{accentLine}{HTML}{a16f0b}
+
+% Misc. Options
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+\urlstyle{same}
+
+% Adjust Margins
+\addtolength{\oddsidemargin}{-0.7in}
+\addtolength{\evensidemargin}{-0.5in}
+\addtolength{\textwidth}{1.19in}
+\addtolength{\topmargin}{-0.7in}
+\addtolength{\textheight}{1.4in}
+
+\setlength{\multicolsep}{-3.0pt}
+\setlength{\columnsep}{-1pt}
+\setlength{\tabcolsep}{0pt}
+\setlength{\footskip}{3.7pt}
+\raggedbottom
+\raggedright
+
+% ATS Readability
+\input{glyphtounicode}
+\pdfgentounicode=1
+
+%-----------------%
+% Custom Commands %
+%-----------------%
+
+% Centered title along with subtitle between HR
+% Usage: \documentTitle{Name}{Details}
+\newcommand{\documentTitle}[2]{
+  \begin{center}
+    {\Huge\color{accentTitle} #1}
+    \vspace{10pt}
+    {\color{accentLine} \hrule}
+    \vspace{2pt}
+    %{\footnotesize\color{accentTitle} #2}
+    \footnotesize{#2}
+    \vspace{2pt}
+    {\color{accentLine} \hrule}
+  \end{center}
+}
+
+% Create a footer with correct padding
+% Usage: \documentFooter{\thepage of X}
+\newcommand{\documentFooter}[1]{
+  \setlength{\footskip}{10.25pt}
+  \fancyfoot[C]{\footnotesize #1}
+}
+
+% Simple wrapper to set up page numbering
+% Usage: \numberedPages
+% WARNING: Must run pdflatex twice!
+\newcommand{\numberedPages}{
+  \documentFooter{\thepage/\pageref{LastPage}}
+}
+
+% Section heading with horizontal rule
+% Usage: \section{Title}
+\titleformat{\section}{
+  \vspace{-5pt}
+  \color{accentText}
+  \raggedright\large\bfseries
+}{}{0em}{}[\color{accentLine}\titlerule]
+
+% Section heading with separator and content on same line
+% Usage: \tinysection{Title}
+\newcommand{\tinysection}[1]{
+  \phantomsection
+  \addcontentsline{toc}{section}{#1}
+  {\large{\bfseries\color{accentText}#1} {\color{accentLine} |}}
+}
+
+% Indented line with arguments left/right aligned in document
+% Usage: \heading{Left}{Right}
+\newcommand{\heading}[2]{
+  \hspace{10pt}#1\hfill#2\\
+}
+
+% Adds \textbf to \heading
+\newcommand{\headingBf}[2]{
+  \heading{\textbf{#1}}{\textbf{#2}}
+}
+
+% Adds \textit to \heading
+\newcommand{\headingIt}[2]{
+  \heading{\textit{#1}}{\textit{#2}}
+}
+
+% Template for itemized lists
+% Usage: \begin{resume_list} [items] \end{resume_list}
+\newenvironment{resume_list}{
+  \vspace{-7pt}
+  \begin{itemize}[itemsep=-2px, parsep=1pt, leftmargin=30pt]
+}{
+  \end{itemize}
+  %\vspace{-2pt}
+}
+
+% Formats an item to use as an itemized title
+% Usage: \itemTitle{Title}
+\newcommand{\itemTitle}[1]{
+  \item[] \underline{#1}\vspace{4pt}
+}
+
+% Bullets used in itemized lists
+\renewcommand\labelitemi{--}
+
+%% END_FILE: mteck.sty
+%%%%%%%%%%%%%%%%%%%%%%
+
+
+%===================%
+% John Doe's Resume %
+%===================%
+
+%\numberedPages % NOTE: lastpage requires a second build
+%\documentFooter{\thepage of 2} % Does similar without using lastpage
+\begin{document}
+
+  %---------%
+  % Heading %
+  %---------%
+
+  \documentTitle{Md Zahirul Islam}{
+    % Web Version
+    %\raisebox{-0.05\height} \faPhone\ [redacted - web copy] ~
+    %\raisebox{-0.15\height} \faEnvelope\ [redacted - web copy] ~
+    %%
+    \href{tel:1234567890}{
+      \raisebox{-0.05\height} \faPhone\ +8801648043376} ~ | ~
+    \href{mailto:user@domain.tld}{
+      \raisebox{-0.15\height} \faEnvelope\ zahirulislamchowdhury01@gmail.com} ~ | ~
+    \href{https://linkedin.com/in/USER/}{
+      \raisebox{-0.15\height} \faLinkedin\ linkedin.com/in/zahir59} ~ | ~
+    \href{https://github.com/USER}{
+      \raisebox{-0.15\height} \faGithub\ github.com/zahir-chow}
+  }
+
+  %---------%
+  % Summary %
+  %---------%
+
+  \tinysection{Summary}
+  Backend Engineer with expertise in building scalable APIs and systems using Django, DRF, and FastAPI; skilled in database optimization, asynchronous task management, and AI-integrated applications.
+  %--------%
+  % Skills %
+  %--------%
+
+  \section{Skills}
+
+  \begin{multicols}{2}
+    \textbf{Programming Languages:} Python, Go (familiar)
+    
+    \textbf{Backend Frameworks:} Django, DRF, FastAPI, Flask
+    
+    \textbf{Databases:} PostgreSQL, MySQL
+    
+    \textbf{Task Queuing \& Caching:} Celery, Redis, RabbitMQ
+    
+    \columnbreak
+    
+    \textbf{Tools \& Technologies:} Git, GitHub, Bitbucket, RESTful APIs, WebSockets
+    
+    \textbf{DevOps \& Testing:} CI/CD pipelines, Docker, Unit Testing
+    
+    \textbf{Authentication \& Security:} JWT, OAuth2, Authentication \& Authorization
+  \end{multicols}
+
+
+  %------------%
+  % Experience %
+  %------------%
+
+  \section{Experience}
+
+  \headingBf{BacBon Limited}{Jun 2024 -- Present}
+  \headingIt{Backend Engineer}{Dhaka}
+  \begin{resume_list}
+    \item Developed and maintained back-end systems using Django, DRF, and FastAPI
+    \item Designed and optimized RESTful APIs for web and mobile applications
+    \item Integrated authentication and authorization with JWT and OAuth2
+    \item Implemented real-time notifications with Django Channels and WebSockets
+    \item Utilized Celery, Redis, and RabbitMQ for task queuing and asynchronous processing
+    \item Optimized PostgreSQL/MySQL queries for performance
+    \item Collaborated closely with product managers, designers, and developers to deliver high-quality features
+    \item Tracked project progress and managed tasks effectively using project management tools
+    \item Worked with integration of the AI/ML model in web applications
+    \item Debugged, troubleshot, and resolved issues across the full application stack
+  \end{resume_list}
+
+  \headingBf{BlueBay IT Limited}{Dec 2023 -- Apr 2024}
+  \headingIt{Backend Engineer}{Dhaka}
+  \begin{resume_list}
+    \item Built scalable back-end systems with Django and DRF
+    \item Designed and optimized RESTful APIs
+    \item Implemented responsive UI components and frontend-backend integration
+    \item Integrated JWT-based authentication and authorization
+    \item Utilized task queuing and caching mechanisms for asynchronous processing
+    \item Optimized database queries to reduce latency
+    \item Collaborated with cross-functional teams to deliver high-quality features
+  \end{resume_list}
+
+  %-----------%
+  % Education %
+  %-----------%
+
+  \section{Education}
+
+  \headingBf{Jahangirnagar University}{}
+  \headingIt{MSc in Computer Science (PMSCS)}{}
+
+  \vspace{5pt}
+  \headingBf{National University}{}
+  \headingIt{BSc Honours in Physics}{}
+
+  %----------------------------%
+  % Projects %
+  %----------------------------%
+
+  \section{Projects}
+
+  \headingBf{Check Me (LMS)}{}
+  \begin{resume_list}
+    \item Multipanel system: School, Teacher, and Student management
+    \item Integrated OpenAI GPT and Google Gemini for AI-driven feedback
+    \item OCR for automatic evaluation of handwritten student submissions
+    \item Designed background task workflows with Celery and Redis for asynchronous processing
+    \item Implemented evaluator assignment logic for fair distribution
+    \item Enabled students to conduct speaking assessments with automated evaluation and scoring
+    \item Built responsive UI components with seamless frontend-backend integration
+    \item Implemented data extraction and transformation systems for student assessment data
+  \end{resume_list}
+
+  \headingBf{BAIRA System}{}
+  \begin{resume_list}
+    \item Developed an agency and membership management system
+    \item Managed NOC assignments, payments, renewals, and transactions
+    \item Designed modules for compensation and treatment payments
+  \end{resume_list}
+
+  %----------%
+  % Languages %
+  %----------%
+
+  \section{Languages}
+
+  \textbf{Bangla:} Native \hfill \textbf{English:} Professional
+
+\end{document}

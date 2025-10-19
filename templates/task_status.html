@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Task Status</title>
+    <meta http-equiv="refresh" content="2" />
+  </head>
+  <body>
+    <h1>Task {{ task_id }}</h1>
+    <p>State: <strong>{{ state }}</strong></p>
+    {% if ready %}
+      {% if successful %}
+        <p>Result: <code>{{ result }}</code></p>
+      {% else %}
+        <p>Task finished with failure: <code>{{ result }}</code></p>
+      {% endif %}
+      <p><a href="/">Back</a></p>
+    {% else %}
+      <p>Waiting... page auto-refreshes</p>
+    {% endif %}
+  </body>
+  </html>
+
+
