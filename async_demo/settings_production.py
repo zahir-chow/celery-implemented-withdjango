@@ -163,8 +163,14 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
 
 # Disable Celery if Redis is not available
-CELERY_TASK_ALWAYS_EAGER = not bool(os.environ.get('CELERY_BROKER_URL'))
+REDIS_AVAILABLE = bool(os.environ.get('CELERY_BROKER_URL') and 'redis' in os.environ.get('CELERY_BROKER_URL', ''))
+CELERY_TASK_ALWAYS_EAGER = not REDIS_AVAILABLE
 CELERY_TASK_EAGER_PROPAGATES = True
+
+# If Redis is not available, use a dummy broker
+if not REDIS_AVAILABLE:
+    CELERY_BROKER_URL = 'memory://'
+    CELERY_RESULT_BACKEND = 'cache+memory://'
 
 # Slide processing settings
 SLIDES_WATCH_DIR = Path(os.environ.get('SLIDES_WATCH_DIR', BASE_DIR / 'incoming_slides'))
