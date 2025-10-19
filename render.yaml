@@ -1,0 +1,108 @@
+services:
+  # Web Service
+  - type: web
+    name: django-cv-app
+    env: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    region: oregon
+    branch: main
+    healthCheckPath: /
+    envVars:
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: False
+      - key: ALLOWED_HOSTS
+        value: django-cv-app.onrender.com
+      - key: DJANGO_SETTINGS_MODULE
+        value: async_demo.settings_production
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: ./start.sh
+
+  # Redis Service for Celery
+  - type: redis
+    name: django-cv-redis
+    plan: starter
+    region: oregon
+    maxmemoryPolicy: allkeys-lru
+
+  # PostgreSQL Database
+  - type: pgsql
+    name: django-cv-db
+    plan: starter
+    region: oregon
+
+  # Celery Worker Service
+  - type: worker
+    name: django-cv-celery-worker
+    env: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    region: oregon
+    branch: main
+    envVars:
+      - key: DJANGO_SECRET_KEY
+        fromService:
+          type: web
+          name: django-cv-app
+          property: envVar
+          envVarKey: DJANGO_SECRET_KEY
+      - key: DEBUG
+        value: False
+      - key: DJANGO_SETTINGS_MODULE
+        value: async_demo.settings_production
+      - key: DATABASE_URL
+        fromService:
+          type: pgsql
+          name: django-cv-db
+          property: connectionString
+      - key: CELERY_BROKER_URL
+        fromService:
+          type: redis
+          name: django-cv-redis
+          property: connectionString
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          type: redis
+          name: django-cv-redis
+          property: connectionString
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: celery -A async_demo worker -l info
+
+  # Celery Beat Service (Scheduler)
+  - type: worker
+    name: django-cv-celery-beat
+    env: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    region: oregon
+    branch: main
+    envVars:
+      - key: DJANGO_SECRET_KEY
+        fromService:
+          type: web
+          name: django-cv-app
+          property: envVar
+          envVarKey: DJANGO_SECRET_KEY
+      - key: DEBUG
+        value: False
+      - key: DJANGO_SETTINGS_MODULE
+        value: async_demo.settings_production
+      - key: DATABASE_URL
+        fromService:
+          type: pgsql
+          name: django-cv-db
+          property: connectionString
+      - key: CELERY_BROKER_URL
+        fromService:
+          type: redis
+          name: django-cv-redis
+          property: connectionString
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          type: redis
+          name: django-cv-redis
+          property: connectionString
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: celery -A async_demo beat -l info
