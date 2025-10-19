@@ -12,6 +12,15 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
+# Add common Render domains and localhost
+ALLOWED_HOSTS.extend([
+    'celery-implemented-withdjango.onrender.com',
+    'localhost',
+    '127.0.0.1',
+])
+# Remove empty strings and duplicates
+ALLOWED_HOSTS = list(set([host.strip() for host in ALLOWED_HOSTS if host.strip()]))
+print(f"DEBUG: ALLOWED_HOSTS = {ALLOWED_HOSTS}")
 
 # Application definition
 INSTALLED_APPS = [
@@ -59,7 +68,6 @@ WSGI_APPLICATION = 'async_demo.wsgi.application'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASE_URL = os.environ.get('DATABASE_URL')
-print(f"DEBUG: DATABASE_URL = {DATABASE_URL}")  # Debug line
 
 if DATABASE_URL and DATABASE_URL.strip():
     try:
@@ -70,10 +78,8 @@ if DATABASE_URL and DATABASE_URL.strip():
                 conn_health_checks=True,
             )
         }
-        print(f"DEBUG: Successfully parsed DATABASE_URL")
     except Exception as e:
-        print(f"DEBUG: Failed to parse DATABASE_URL: {e}")
-        print(f"DEBUG: Falling back to SQLite")
+        # Fallback to SQLite if DATABASE_URL parsing fails
         DATABASES = {
             'default': {
                 'ENGINE': 'django.db.backends.sqlite3',
@@ -81,7 +87,6 @@ if DATABASE_URL and DATABASE_URL.strip():
             }
         }
 else:
-    print(f"DEBUG: DATABASE_URL is empty, using SQLite")
     # Fallback to SQLite if DATABASE_URL is not provided
     DATABASES = {
         'default': {
