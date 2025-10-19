@@ -154,27 +154,17 @@ if not DEBUG:
     CSRF_COOKIE_SECURE = True
     X_FRAME_OPTIONS = 'DENY'
 
-# Celery configuration - Check if Redis is available
-REDIS_AVAILABLE = bool(os.environ.get('CELERY_BROKER_URL') and 'redis' in os.environ.get('CELERY_BROKER_URL', ''))
-print(f"DEBUG: REDIS_AVAILABLE = {REDIS_AVAILABLE}")
-print(f"DEBUG: CELERY_BROKER_URL = {os.environ.get('CELERY_BROKER_URL', 'NOT_SET')}")
-
-if REDIS_AVAILABLE:
-    # Use Redis if available
-    CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')
-    CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
-    CELERY_TASK_ALWAYS_EAGER = False
-else:
-    # Use memory broker if Redis is not available
-    CELERY_BROKER_URL = 'memory://'
-    CELERY_RESULT_BACKEND = 'cache+memory://'
-    CELERY_TASK_ALWAYS_EAGER = True
-
+# Celery configuration
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
-CELERY_TASK_EAGER_PROPAGATES = True
+
+# Debug Redis connection
+print(f"DEBUG: CELERY_BROKER_URL = {CELERY_BROKER_URL}")
+print(f"DEBUG: CELERY_RESULT_BACKEND = {CELERY_RESULT_BACKEND}")
 
 # Slide processing settings
 SLIDES_WATCH_DIR = Path(os.environ.get('SLIDES_WATCH_DIR', BASE_DIR / 'incoming_slides'))

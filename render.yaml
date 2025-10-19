@@ -17,6 +17,21 @@ services:
         value: celery-implemented-withdjango.onrender.com,localhost,127.0.0.1
       - key: DJANGO_SETTINGS_MODULE
         value: async_demo.settings_production
+      - key: DATABASE_URL
+        fromService:
+          type: pgsql
+          name: django-cv-db
+          property: connectionString
+      - key: CELERY_BROKER_URL
+        fromService:
+          type: redis
+          name: django-cv-redis
+          property: connectionString
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          type: redis
+          name: django-cv-redis
+          property: connectionString
     buildCommand: pip install --upgrade pip && pip install -r requirements.txt
     startCommand: ./start.sh
 
