@@ -155,16 +155,10 @@ if not DEBUG:
     X_FRAME_OPTIONS = 'DENY'
 
 # Celery configuration
-CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')
-CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
-
-# Debug Redis connection
-print(f"DEBUG: CELERY_BROKER_URL = {CELERY_BROKER_URL}")
-print(f"DEBUG: CELERY_RESULT_BACKEND = {CELERY_RESULT_BACKEND}")
 
 # Add connection timeout and retry settings
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
@@ -172,6 +166,60 @@ CELERY_BROKER_CONNECTION_RETRY = True
 CELERY_BROKER_CONNECTION_MAX_RETRIES = 10
 CELERY_TASK_SOFT_TIME_LIMIT = 60
 CELERY_TASK_TIME_LIMIT = 120
+
+# Redis connection settings for better reliability
+CELERY_BROKER_CONNECTION_TIMEOUT = 30
+CELERY_RESULT_BACKEND_CONNECTION_TIMEOUT = 30
+CELERY_BROKER_HEARTBEAT = 30
+CELERY_BROKER_POOL_LIMIT = 10
+
+# Additional Redis configuration with comprehensive fallback logic
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
+
+# Debug: Print all environment variables that might affect Redis
+print(f"DEBUG: All environment variables:")
+for key, value in os.environ.items():
+    if 'redis' in key.lower() or 'celery' in key.lower():
+        print(f"  {key} = {value}")
+
+# Handle different deployment scenarios
+if os.environ.get('RENDER') or 'onrender.com' in os.environ.get('ALLOWED_HOSTS', ''):
+    # On Render, use the correct Redis service name
+    print("DEBUG: Detected Render deployment environment")
+    if 'redis://redis:' in CELERY_BROKER_URL:
+        CELERY_BROKER_URL = CELERY_BROKER_URL.replace('redis://redis:', 'redis://django-cv-redis:')
+        print(f"DEBUG: Updated CELERY_BROKER_URL to: {CELERY_BROKER_URL}")
+    if 'redis://redis:' in CELERY_RESULT_BACKEND:
+        CELERY_RESULT_BACKEND = CELERY_RESULT_BACKEND.replace('redis://redis:', 'redis://django-cv-redis:')
+        print(f"DEBUG: Updated CELERY_RESULT_BACKEND to: {CELERY_RESULT_BACKEND}")
+
+# Force Redis to use the same URL for both broker and result backend
+if CELERY_BROKER_URL != CELERY_RESULT_BACKEND:
+    CELERY_RESULT_BACKEND = CELERY_BROKER_URL
+
+# Debug Redis connection
+print(f"DEBUG: CELERY_BROKER_URL = {CELERY_BROKER_URL}")
+print(f"DEBUG: CELERY_RESULT_BACKEND = {CELERY_RESULT_BACKEND}")
+
+# Test Redis connection on startup
+try:
+    import redis
+    redis_client = redis.from_url(CELERY_BROKER_URL, socket_connect_timeout=5, socket_timeout=5)
+    redis_client.ping()
+    print("DEBUG: Redis connection test successful")
+except Exception as e:
+    print(f"DEBUG: Redis connection test failed: {e}")
+    print(f"DEBUG: Attempted to connect to: {CELERY_BROKER_URL}")
+    # Don't fail startup, but log the issue
+    # Try alternative connection methods
+    try:
+        # Try with different timeout settings
+        redis_client = redis.from_url(CELERY_BROKER_URL, socket_connect_timeout=10, socket_timeout=10, retry_on_timeout=True)
+        redis_client.ping()
+        print("DEBUG: Redis connection test successful with retry settings")
+    except Exception as e2:
+        print(f"DEBUG: Redis connection test failed with retry settings: {e2}")
 
 # Slide processing settings
 SLIDES_WATCH_DIR = Path(os.environ.get('SLIDES_WATCH_DIR', BASE_DIR / 'incoming_slides'))
