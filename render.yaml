@@ -23,9 +23,15 @@ services:
           name: django-cv-db
           property: connectionString
       - key: CELERY_BROKER_URL
-        value: redis://django-cv-redis:6379/0
+        fromService:
+          type: redis
+          name: django-cv-redis
+          property: connectionString
       - key: CELERY_RESULT_BACKEND
-        value: redis://django-cv-redis:6379/0
+        fromService:
+          type: redis
+          name: django-cv-redis
+          property: connectionString
     buildCommand: pip install --upgrade pip && pip install -r requirements.txt
     startCommand: ./start.sh
 
@@ -67,9 +73,15 @@ services:
           name: django-cv-db
           property: connectionString
       - key: CELERY_BROKER_URL
-        value: redis://django-cv-redis:6379/0
+        fromService:
+          type: redis
+          name: django-cv-redis
+          property: connectionString
       - key: CELERY_RESULT_BACKEND
-        value: redis://django-cv-redis:6379/0
+        fromService:
+          type: redis
+          name: django-cv-redis
+          property: connectionString
     buildCommand: pip install --upgrade pip && pip install -r requirements.txt
     startCommand: celery -A async_demo worker -l info
 
@@ -98,8 +110,14 @@ services:
           name: django-cv-db
           property: connectionString
       - key: CELERY_BROKER_URL
-        value: redis://django-cv-redis:6379/0
+        fromService:
+          type: redis
+          name: django-cv-redis
+          property: connectionString
       - key: CELERY_RESULT_BACKEND
-        value: redis://django-cv-redis:6379/0
+        fromService:
+          type: redis
+          name: django-cv-redis
+          property: connectionString
     buildCommand: pip install --upgrade pip && pip install -r requirements.txt
     startCommand: celery -A async_demo beat -l info

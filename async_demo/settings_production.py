@@ -193,6 +193,14 @@ if os.environ.get('RENDER') or 'onrender.com' in os.environ.get('ALLOWED_HOSTS',
     if 'redis://redis:' in CELERY_RESULT_BACKEND:
         CELERY_RESULT_BACKEND = CELERY_RESULT_BACKEND.replace('redis://redis:', 'redis://django-cv-redis:')
         print(f"DEBUG: Updated CELERY_RESULT_BACKEND to: {CELERY_RESULT_BACKEND}")
+    
+    # Also try to get Redis URL from Render's internal service discovery
+    if 'REDIS_URL' in os.environ:
+        redis_url = os.environ['REDIS_URL']
+        if redis_url and redis_url.startswith('redis://'):
+            CELERY_BROKER_URL = redis_url
+            CELERY_RESULT_BACKEND = redis_url
+            print(f"DEBUG: Using REDIS_URL from environment: {redis_url}")
 
 # Force Redis to use the same URL for both broker and result backend
 if CELERY_BROKER_URL != CELERY_RESULT_BACKEND:
@@ -211,15 +219,32 @@ try:
 except Exception as e:
     print(f"DEBUG: Redis connection test failed: {e}")
     print(f"DEBUG: Attempted to connect to: {CELERY_BROKER_URL}")
-    # Don't fail startup, but log the issue
-    # Try alternative connection methods
-    try:
-        # Try with different timeout settings
-        redis_client = redis.from_url(CELERY_BROKER_URL, socket_connect_timeout=10, socket_timeout=10, retry_on_timeout=True)
-        redis_client.ping()
-        print("DEBUG: Redis connection test successful with retry settings")
-    except Exception as e2:
-        print(f"DEBUG: Redis connection test failed with retry settings: {e2}")
+    
+    # Try alternative Redis connection methods
+    alternative_urls = [
+        os.environ.get('REDIS_URL'),
+        os.environ.get('CELERY_BROKER_URL'),
+        'redis://localhost:6379/0',
+        'redis://redis:6379/0',
+        'redis://django-cv-redis:6379/0'
+    ]
+    
+    for alt_url in alternative_urls:
+        if alt_url and alt_url != CELERY_BROKER_URL:
+            try:
+                print(f"DEBUG: Trying alternative Redis URL: {alt_url}")
+                redis_client = redis.from_url(alt_url, socket_connect_timeout=5, socket_timeout=5)
+                redis_client.ping()
+                CELERY_BROKER_URL = alt_url
+                CELERY_RESULT_BACKEND = alt_url
+                print(f"DEBUG: Alternative Redis connection successful: {alt_url}")
+                break
+            except Exception as e2:
+                print(f"DEBUG: Alternative Redis connection failed: {e2}")
+    
+    # If all alternatives fail, log the issue but don't fail startup
+    if not redis_client or not hasattr(redis_client, 'ping'):
+        print("DEBUG: All Redis connection attempts failed - Celery tasks may not work")
 
 # Slide processing settings
 SLIDES_WATCH_DIR = Path(os.environ.get('SLIDES_WATCH_DIR', BASE_DIR / 'incoming_slides'))
