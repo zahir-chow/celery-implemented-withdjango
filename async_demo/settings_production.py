@@ -173,7 +173,7 @@ CELERY_RESULT_BACKEND_CONNECTION_TIMEOUT = 30
 CELERY_BROKER_HEARTBEAT = 30
 CELERY_BROKER_POOL_LIMIT = 10
 
-# Additional Redis configuration with comprehensive fallback logic
+# Comprehensive Redis configuration with multiple fallback strategies
 CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')
 CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
 
@@ -183,24 +183,46 @@ for key, value in os.environ.items():
     if 'redis' in key.lower() or 'celery' in key.lower():
         print(f"  {key} = {value}")
 
-# Handle different deployment scenarios
+# Handle different deployment scenarios with comprehensive fallback logic
 if os.environ.get('RENDER') or 'onrender.com' in os.environ.get('ALLOWED_HOSTS', ''):
-    # On Render, use the correct Redis service name
     print("DEBUG: Detected Render deployment environment")
-    if 'redis://redis:' in CELERY_BROKER_URL:
-        CELERY_BROKER_URL = CELERY_BROKER_URL.replace('redis://redis:', 'redis://django-cv-redis:')
-        print(f"DEBUG: Updated CELERY_BROKER_URL to: {CELERY_BROKER_URL}")
-    if 'redis://redis:' in CELERY_RESULT_BACKEND:
-        CELERY_RESULT_BACKEND = CELERY_RESULT_BACKEND.replace('redis://redis:', 'redis://django-cv-redis:')
-        print(f"DEBUG: Updated CELERY_RESULT_BACKEND to: {CELERY_RESULT_BACKEND}")
     
-    # Also try to get Redis URL from Render's internal service discovery
-    if 'REDIS_URL' in os.environ:
-        redis_url = os.environ['REDIS_URL']
-        if redis_url and redis_url.startswith('redis://'):
+    # Strategy 1: Try to get Redis URL from Render's internal service discovery
+    redis_url_candidates = [
+        os.environ.get('REDIS_URL'),
+        os.environ.get('CELERY_BROKER_URL'),
+        os.environ.get('CELERY_RESULT_BACKEND'),
+    ]
+    
+    for redis_url in redis_url_candidates:
+        if redis_url and redis_url.startswith('redis://') and 'redis:' not in redis_url:
             CELERY_BROKER_URL = redis_url
             CELERY_RESULT_BACKEND = redis_url
-            print(f"DEBUG: Using REDIS_URL from environment: {redis_url}")
+            print(f"DEBUG: Using Redis URL from environment: {redis_url}")
+            break
+    
+    # Strategy 2: If still using redis: hostname, try to fix it
+    if 'redis://redis:' in CELERY_BROKER_URL:
+        # Try multiple possible Redis service names
+        possible_redis_hosts = [
+            'django-cv-redis',
+            'redis',
+            'localhost'
+        ]
+        
+        for host in possible_redis_hosts:
+            test_url = CELERY_BROKER_URL.replace('redis://redis:', f'redis://{host}:')
+            try:
+                import redis
+                test_client = redis.from_url(test_url, socket_connect_timeout=2, socket_timeout=2)
+                test_client.ping()
+                CELERY_BROKER_URL = test_url
+                CELERY_RESULT_BACKEND = test_url
+                print(f"DEBUG: Successfully connected to Redis at: {test_url}")
+                break
+            except Exception as e:
+                print(f"DEBUG: Failed to connect to {test_url}: {e}")
+                continue
 
 # Force Redis to use the same URL for both broker and result backend
 if CELERY_BROKER_URL != CELERY_RESULT_BACKEND:
@@ -245,6 +267,20 @@ except Exception as e:
     # If all alternatives fail, log the issue but don't fail startup
     if not redis_client or not hasattr(redis_client, 'ping'):
         print("DEBUG: All Redis connection attempts failed - Celery tasks may not work")
+        
+        # Final fallback: Try to use a simple Redis configuration that might work
+        print("DEBUG: Attempting final fallback Redis configuration")
+        try:
+            # Try with just the hostname without port specification
+            fallback_url = 'redis://django-cv-redis/0'
+            redis_client = redis.from_url(fallback_url, socket_connect_timeout=10, socket_timeout=10)
+            redis_client.ping()
+            CELERY_BROKER_URL = fallback_url
+            CELERY_RESULT_BACKEND = fallback_url
+            print(f"DEBUG: Fallback Redis connection successful: {fallback_url}")
+        except Exception as e3:
+            print(f"DEBUG: Final fallback Redis connection failed: {e3}")
+            print("DEBUG: Celery tasks will not work without Redis connection")
 
 # Slide processing settings
 SLIDES_WATCH_DIR = Path(os.environ.get('SLIDES_WATCH_DIR', BASE_DIR / 'incoming_slides'))
