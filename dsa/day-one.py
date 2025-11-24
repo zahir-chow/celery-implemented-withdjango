@@ -99,6 +99,7 @@ def heap_sort(arr):
 
     # Step 1: Build max heap
     for i in range(n//2 - 1, -1, -1):
+        # n//2 - 1 is the last parent node, so we start from there to the root node at index 0. double -1 is to go backwards. 
         heapify(arr, n, i)
 
     # Step 2: Extract elements
